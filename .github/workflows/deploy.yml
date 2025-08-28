@@ -7,10 +7,25 @@ on:
 
 jobs:
   deploy:
-    runs-on: Ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Trigger Reference Deployment
         env:
           RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run:
           curl -X POST "$RENDER_DEPLOY_HOOK_URL"
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/mon-app
+            git pull origin main
+            npm install
+            pm2 restart mon-app
